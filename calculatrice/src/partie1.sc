@@ -23,6 +23,8 @@ def gcd(a: Int, b: Int): Int =
   if (b == 0) a else gcd(b, a % b)
 
 def solve(a: Double, b: Double, c: Double): String = {
+  if (a == 0) throw new UnsupportedOperationException
+
   val delta = b * b - 4 * a * c
 
   if (delta > 0) {
@@ -33,8 +35,8 @@ def solve(a: Double, b: Double, c: Double): String = {
   } else if (delta == 0) {
     (-b / (2 * a)).toString
   } else {
-    (-b / (2 * a)).toString + " + " + ((-b + Math.sqrt(-delta)) / (2 * a)) + "i" + "\n" +
-      (-b / (2 * a)).toString + " + " + ((+b + Math.sqrt(-delta)) / (2 * a)) + "i"
+    ((-b / (2 * a)).toString + " + " + ((-b + Math.sqrt(-delta)) / (2 * a)) + "i",
+      (-b / (2 * a)).toString + " + " + ((+b + Math.sqrt(-delta)) / (2 * a)) + "i").toString()
   }
 }
 
