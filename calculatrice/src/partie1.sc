@@ -63,7 +63,24 @@ def prime(n: Long): Boolean = {
 	loop(Math.sqrt(n).toLong)
 }
 
-def egcd(u: Long, v: Long): (Long, Long, Long) = ???
+def egcd(u: Long, v: Long): (Long, Long, Long) = {
+	def loop(a: Long, b: Long,
+	         x1: Long = 0, x2: Long = 1,
+	         y1: Long = 1, y2: Long = 0): (Long, Long, Long) = {
+		if (b == 0) (x2, y2, a)
+		else {
+			loop(
+				a = b,
+				b = a % b,
+				x1 = x2 - (a / b) * x1,
+				x2 = x1,
+				y1 = y2 - (a / b) * y1,
+				y2 = y1
+			)
+		}
+	}
+	loop(u, v)
+}
 
 def modInvert(u: Long, v: Long): Long = {
 	val (x, _, z) = egcd(u, v)
