@@ -54,7 +54,7 @@ def sqrt(n: Double): Double = {
 }
 
 def prime(n: Long): Boolean = {
-	require(n.isWhole && n > 0)
+	require(n > 0)
 	def loop(x: Long): Boolean = {
 		if (x == 1) true
 		else if (n % x == 0) false
