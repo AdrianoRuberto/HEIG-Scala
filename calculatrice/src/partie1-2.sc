@@ -1,4 +1,10 @@
+/**
+ * Scala - Labo 1 (partie 1 & 2)
+ * Bastien Clément
+ * Adriano Ruberto
+ */
 
+/** Binary operations */
 def operation(op: Char, a: Double, b: Double): Double = op match {
 	case '+' => a + b
 	case '-' => a - b
@@ -7,10 +13,12 @@ def operation(op: Char, a: Double, b: Double): Double = op match {
 	case '^' => Math.pow(a, b)
 }
 
+/** Unary operations */
 def operation(op: Char, a: Double): Double = op match {
 	case '!' => factorial(a.toLong)
 }
 
+/** Computes factorial of n */
 def factorial(n: Long): Long = {
 	require(n >= 0)
 	def loop(n: Long, acc: Long): Long = {
@@ -20,10 +28,12 @@ def factorial(n: Long): Long = {
 	loop(n, 1)
 }
 
+/** Greatest Common Divisor */
 def gcd(a: Long, b: Long): Long = {
 	if (b == 0) a else gcd(b, a % b)
 }
 
+/** Solves quadratic equations */
 def solve(a: Double, b: Double, c: Double): String = {
 	require(a != 0)
 	val delta = b * b - 4 * a * c
@@ -43,6 +53,7 @@ def solve(a: Double, b: Double, c: Double): String = {
 	}
 }
 
+/** Square root */
 def sqrt(n: Double): Double = {
 	require(n >= 0)
 	val epsilon = 0.0001
@@ -53,6 +64,7 @@ def sqrt(n: Double): Double = {
 	loop(1)
 }
 
+/** Tests if the given number is a prime */
 def prime(n: Long): Boolean = {
 	require(n > 0)
 	def loop(x: Long): Boolean = {
@@ -63,6 +75,7 @@ def prime(n: Long): Boolean = {
 	loop(Math.sqrt(n).toLong)
 }
 
+/** Extended Euclidean algorithm implementation */
 def egcd(u: Long, v: Long): (Long, Long, Long) = {
 	def loop(a: Long, b: Long,
 	         x1: Long = 0, x2: Long = 1,
@@ -82,6 +95,7 @@ def egcd(u: Long, v: Long): (Long, Long, Long) = {
 	loop(u, v)
 }
 
+/** Modular multiplicative inverse */
 def modInvert(u: Long, v: Long): Long = {
 	val (x, _, z) = egcd(u, v)
 	assert(z == 1)
