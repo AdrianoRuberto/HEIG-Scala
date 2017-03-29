@@ -35,8 +35,9 @@ object Parser {
 
 	/** Parses function arguments list */
 	private lazy val parseArguments: Step[List[Expr]] = {
-		parseAdditive ~ (Comma ~ parseAdditive map { case comma ~ arg => arg }).* map {
-			case first ~ nexts => first :: nexts
+		(parseAdditive ~ (Comma ~ parseAdditive map { case comma ~ arg => arg }).*).? map {
+			case Some(first ~ nexts) => first :: nexts
+			case None => Nil
 		}
 	}
 

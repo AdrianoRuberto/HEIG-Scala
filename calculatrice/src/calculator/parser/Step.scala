@@ -50,5 +50,6 @@ private[parser] object Step {
 	/** Creates a parser Step that matches a single token */
 	def single[T](f: PartialFunction[Token, T]): Step[T] = (tokens: Tokens) => tokens match {
 		case tok :: next => f.lift(tok.token).map(Success(_, next)).getOrElse(Failure(tok))
+		case Nil => ???
 	}
 }
