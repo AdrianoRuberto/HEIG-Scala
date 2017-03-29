@@ -21,6 +21,9 @@ class Calculator {
 				memory = memory.empty
 				CalculatorMessage("Memory was cleared")
 
+			case Call("show", args) =>
+				CalculatorMessage(args.map(_.toString).mkString("\n"))
+
 			case Assign(name, expr) =>
 				val value = eval(expr)
 				memory += (name -> value)
