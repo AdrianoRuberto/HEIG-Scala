@@ -16,7 +16,7 @@ object Parser {
 		parseExpression(tokens) match {
 			case Success(expr, Nil) =>
 				Right(expr)
-			case Failure(unexpected) =>
+			case Failure(unexpected, _) =>
 				val wave = mkWave(input, unexpected)
 				Left(ParseError(s"Unexpected token: ${unexpected.token} at offset ${unexpected.offset}\n\n$wave\n"))
 			case _ =>
@@ -35,22 +35,21 @@ object Parser {
 
 	/** Parses function arguments list */
 	private lazy val parseArguments: Step[List[Expr]] = {
-		(parseAdditive ~ (Comma ~ parseAdditive map { case comma ~ arg => arg }).*).? map {
-			case Some(first ~ nexts) => first :: nexts
-			case None => Nil
+		parseAdditive ~ (Comma ~ parseAdditive map { case comma ~ arg => arg }).* map {
+			case first ~ nexts => first :: nexts
 		}
 	}
 
 	/** Parses a function call */
 	private val parseCall: Step[Expr] = {
-		parseIdentifier ~ LParen ~ parseArguments ~ RParen map {
-			case name ~ lp ~ args ~ rp => Call(name, args)
+		parseIdentifier ~ LParen ~ parseArguments.? ~ RParen.! map {
+			case name ~ lp ~ args ~ rp => Call(name, args.getOrElse(Nil))
 		}
 	}
 
 	/** Parses a parenthesised expression */
 	private lazy val parseParentheses: Step[Expr] = {
-		LParen ~ parseAdditive ~ RParen map {
+		LParen ~ parseAdditive.! ~ RParen.! map {
 			case lp ~ expr ~ rp => expr
 		}
 	}
@@ -72,7 +71,7 @@ object Parser {
 
 	/** Parses the unary minus operator */
 	private val parseUnaryMinus: Step[Expr] = {
-		Operator("-") ~ parseUnaryMinus map {
+		Operator("-") ~ (parseUnaryMinus | parsePower) map {
 			case minus ~ operand => Unary(minus.value, operand)
 		}
 	}
@@ -94,7 +93,7 @@ object Parser {
 
 	/** Parses variable assignment */
 	private val parseAssign: Step[Expr] = {
-		parseIdentifier ~ Operator("=") ~ parseAdditive map {
+		parseIdentifier ~ Operator("=") ~ parseAdditive.! map {
 			case id ~ eq ~ value => Assign(id, value)
 		}
 	}

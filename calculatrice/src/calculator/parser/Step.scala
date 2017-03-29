@@ -39,6 +39,9 @@ private[parser] trait Step[T] {
 		(tokens: Tokens) => loop(tokens)
 	}
 
+	/** Sets failure of this parse step as definitive to prevent backtracking */
+	def ! : Step[T] = (tokens: Tokens) => apply(tokens).asDefinitive
+
 	/** Constructs a new parser step that parses the same input as this step but mapping its result */
 	def map[B](f: T => B): Step[B] = (tokens: Tokens) => apply(tokens).map(f)
 }
@@ -50,6 +53,6 @@ private[parser] object Step {
 	/** Creates a parser Step that matches a single token */
 	def single[T](f: PartialFunction[Token, T]): Step[T] = (tokens: Tokens) => tokens match {
 		case tok :: next => f.lift(tok.token).map(Success(_, next)).getOrElse(Failure(tok))
-		case Nil => ???
+		case Nil => Failure(SourceToken(Token.Unknown('?'), 0))
 	}
 }
