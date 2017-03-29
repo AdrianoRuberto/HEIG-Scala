@@ -6,51 +6,30 @@ import calculator.parser.Step.Tokens
 import scala.annotation.tailrec
 
 private[parser] trait Step[T] {
+	/** Apply this parser step to the given input tokens */
 	def apply(tokens: Tokens): StepResult[T]
 
-	def ~[B](next: => Step[B]): Step[T ~ B] = Step.and(this, next)
-	def |[B >: T](next: => Step[B]): Step[B] = Step.or(this, next)
+	/**
+	  * Constructs a new parser step by combining this step with another one.
+	  * The resulting step will return the results of both step only if both steps succeed.
+	  */
+	def ~[B](next: => Step[B]): Step[T ~ B] = (tokens: Tokens) => this(tokens) andThen next
 
-	def ? : Step[Option[T]] = Step.maybe(this)
-	def * : Step[List[T]] = Step.repeat(this)
+	/**
+	  * Constructs a new parser step by combining this step with another one.
+	  * The resulting step will return the result of the first step if it succeed, otherwise
+	  * the result of the other step will be returned.
+	  */
+	def |[B >: T](next: => Step[B]): Step[B] = (tokens: Tokens) => this(tokens) orElse next(tokens)
 
-	def map[B](f: T => B): Step[B] = Step.simple(apply(_).map(f))
-}
+	/** Constructs an optional parser step from this step */
+	def ? : Step[Option[T]] = (tokens: Tokens) => this(tokens).map(Some.apply) orElse Success(None, tokens)
 
-private[parser] object Step {
-	private type Tokens = List[SourceToken]
-
-	def simple[T](f: Tokens => StepResult[T]): Step[T] = (tokens: Tokens) => f(tokens)
-
-	def partial[T](f: PartialFunction[Tokens, StepResult[T]]): Step[T] = Step.simple { tokens: Tokens =>
-		f.applyOrElse[Tokens, StepResult[T]](tokens, _ => Failure(tokens.head))
-	}
-
-	def single[T](f: PartialFunction[Token, T]): Step[T] = Step.partial {
-		case tok :: next if f.isDefinedAt(tok.token) => Success(f(tok.token), next)
-	}
-
-	def and[T, U](first: Step[T], second: => Step[U]): Step[T ~ U] = {
-		(tokens: Tokens) => {
-			first(tokens) match {
-				case Success(a, rest) =>
-					second(rest) match {
-						case Success(b, next) => Success(new ~(a, b), next)
-						case fail: Failure => fail
-					}
-				case fail: Failure => fail
-			}
-		}
-	}
-
-	def maybe[T](step: Step[T]): Step[Option[T]] = {
-		(tokens: Tokens) => step(tokens).map(Some.apply) orElse Success(None, tokens)
-	}
-
-	def repeat[T](step: Step[T]): Step[List[T]] = {
+	/** Constructs a new parser step that parses a repetition of this step */
+	def * : Step[List[T]] = {
 		@tailrec
 		def loop(tokens: Tokens, acc: List[T] = Nil): StepResult[List[T]] = {
-			step(tokens) match {
+			this(tokens) match {
 				case Success(item, next) => loop(next, item :: acc)
 				case fail: Failure => Success(acc.reverse, tokens)
 			}
@@ -58,7 +37,16 @@ private[parser] object Step {
 		(tokens: Tokens) => loop(tokens)
 	}
 
-	def or[T, U >: T](first: Step[T], second: => Step[U]): Step[U] = {
-		(tokens: Tokens) => first(tokens) orElse second(tokens)
+	/** Constructs a new parser step that parses the same input as this step but mapping its result */
+	def map[B](f: T => B): Step[B] = (tokens: Tokens) => this(tokens).map(f)
+}
+
+private[parser] object Step {
+	/** Input type of parser Step functions */
+	private type Tokens = List[SourceToken]
+
+	/** Creates a parser Step that matches a single token */
+	def single[T](f: PartialFunction[Token, T]): Step[T] = (tokens: Tokens) => tokens match {
+		case tok :: next => f.lift(tok.token).map(Success(_, next)).getOrElse(Failure(tok))
 	}
 }
