@@ -9,7 +9,7 @@ class Calculator {
 	private var memory: Map[String, Double] = Map.empty
 	private var ans: Double = 0.0
 
-	def execute(input: String): CalculatorResult = Parser.parse(input).map(execute) match {
+	def execute(input: String): CalculatorResult = Parser.parse(input.trim).map(execute) match {
 		case Left(parseError) => CalculatorMessage(s"[Parse error] ${parseError.msg}")
 		case Right(res @ CalculatorValue(value)) => ans = value; res
 		case Right(res) => res
@@ -20,7 +20,7 @@ class Calculator {
 			case Call("clear", _) =>
 				memory = memory.empty
 				ans = 0.0
-				CalculatorMessage("Memory was cleared")
+				CalculatorMessage("Memory cleared")
 
 			case Call("show", args) =>
 				CalculatorMessage(args.map(_.toString).mkString("\n"))
