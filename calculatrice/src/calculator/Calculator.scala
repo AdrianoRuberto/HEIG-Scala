@@ -19,6 +19,7 @@ class Calculator {
 		tree match {
 			case Call("clear", _) =>
 				memory = memory.empty
+				ans = 0.0
 				CalculatorMessage("Memory was cleared")
 
 			case Call("show", args) =>
