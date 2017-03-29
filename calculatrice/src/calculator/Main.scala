@@ -19,7 +19,7 @@ object Main {
 				usage()
 				console()
 			case line =>
-				engine.evaluate(line) match {
+				engine.execute(line) match {
 					case CalculatorValue(value) => println(s"ans = $value")
 					case CalculatorMessage(msg) => println(msg)
 				}
