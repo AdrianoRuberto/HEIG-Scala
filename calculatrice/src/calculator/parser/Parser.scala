@@ -105,7 +105,7 @@ object Parser {
 
 	/** Helper for binary operator parsing (with precedence) */
 	private def binaryStep(next: Step[Expr])(opMatcher: PartialFunction[Token, String]): Step[Expr] = {
-		next ~ (Step.single(opMatcher) ~ next).* map {
+		next ~ (Step.single(opMatcher).! ~ next).* map {
 			case first ~ ops => ops.foldLeft(first) { case (lhs, (op ~ rhs)) => Binary(op, lhs, rhs) }
 		}
 	}

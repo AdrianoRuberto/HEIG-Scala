@@ -4,6 +4,7 @@ import calculator.lexer.Token.SourceToken
 import calculator.parser.Step.Tokens
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 private[parser] trait Step[T] {
 	/** Apply this parser step to the given input tokens */
@@ -30,10 +31,10 @@ private[parser] trait Step[T] {
 	/** Constructs a new parser step that parses a repetition of this step */
 	def * : Step[List[T]] = {
 		@tailrec
-		def loop(tokens: Tokens, acc: List[T] = Nil): StepResult[List[T]] = {
+		def loop(tokens: Tokens, acc: ListBuffer[T] = ListBuffer.empty): StepResult[List[T]] = {
 			apply(tokens) match {
-				case Success(item, next) => loop(next, item :: acc)
-				case fail: Failure => Success(acc.reverse, tokens)
+				case Success(item, next) => loop(next, acc += item)
+				case fail: Failure => Success(acc.toList, tokens)
 			}
 		}
 		(tokens: Tokens) => loop(tokens)

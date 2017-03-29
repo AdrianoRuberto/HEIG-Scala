@@ -3,37 +3,38 @@ package calculator.lexer
 import calculator.lexer.Token.SourceToken
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 object Lexer {
 	case class LexerOffset(value: Int) extends AnyVal {
 		def +(skip: Int): LexerOffset = LexerOffset(value + skip)
 	}
 
-	def tokenize(input: String): List[SourceToken] = readNext(input.toList, Nil, LexerOffset(0)).reverse
+	def tokenize(input: String): List[SourceToken] = readNext(input.toList, ListBuffer.empty, LexerOffset(0))
 
 	@tailrec
-	def readNext(input: List[Char], acc: List[SourceToken], offset: LexerOffset): List[SourceToken] = {
+	def readNext(input: List[Char], acc: ListBuffer[SourceToken], offset: LexerOffset): List[SourceToken] = {
 		implicit val currentOffset = offset
 		input match {
 			case c :: cs if Character.isWhitespace(c) =>
 				readNext(cs, acc, offset + 1)
 			case (op @ ('+' | '-' | '*' | '/' | '%' | '^' | '!' | '=')) :: cs =>
-				readNext(cs, Token.Operator(op.toString) :: acc, offset + 1)
+				readNext(cs, acc += Token.Operator(op.toString), offset + 1)
 			case (p @ ('(' | ')')) :: cs =>
-				readNext(cs, (if (p == '(') Token.LParen else Token.RParen) :: acc, offset + 1)
+				readNext(cs, acc += (if (p == '(') Token.LParen else Token.RParen), offset + 1)
 			case ',' :: cs =>
-				readNext(cs, Token.Comma :: acc, offset + 1)
+				readNext(cs, acc += Token.Comma, offset + 1)
 			case c :: cs if Character.isDigit(c) =>
 				val (consumed, token, next) = readNumber(input)
-				readNext(next, token :: acc, offset + consumed)
+				readNext(next, acc += token, offset + consumed)
 			case c :: cs if Character.isJavaIdentifierStart(c) =>
 				val (rest, next) = cs.span(Character.isJavaIdentifierPart)
 				val identifier = (c :: rest).mkString
-				readNext(next, Token.Identifier(identifier) :: acc, offset + identifier.length)
+				readNext(next, acc += Token.Identifier(identifier), offset + identifier.length)
 			case c :: cs =>
-				readNext(cs, Token.Unknown(c) :: acc, offset + 1)
+				readNext(cs, acc += Token.Unknown(c), offset + 1)
 			case Nil =>
-				Token.End :: acc
+				(acc += Token.End).toList
 		}
 	}
 
