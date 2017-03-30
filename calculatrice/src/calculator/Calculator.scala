@@ -60,10 +60,6 @@ class Calculator {
 		case _ => throw CalculatorError(s"Unable to evaluate expression: $expr", "Engine")
 	}
 
-	def functionCall(f0: () => Double): Double = ???
-	def functionCall(f1: (Double) => Double): Double = ???
-	def functionCall(f2: (Double, Double) => Double): Double = ???
-
 	/** Binary operations */
 	def operation(op: String, lhs: Double, rhs: Double): Double = op match {
 		case "+" => lhs + rhs

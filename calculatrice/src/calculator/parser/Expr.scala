@@ -20,6 +20,6 @@ object Expr {
 	case class Unary(operator: String, operand: Expr) extends Expr
 
 	/** A function call */
-	case class Call(fun: String, args: Seq[Expr]) extends Expr
+	case class Call(fun: String, args: List[Expr]) extends Expr
 }
 
