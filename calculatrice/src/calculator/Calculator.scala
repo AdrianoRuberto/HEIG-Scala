@@ -56,7 +56,7 @@ class Calculator {
 		case Call("modinv", List(a, b)) => modInvert(eval(a).toLong, eval(b).toLong)
 		case Call("sqrt", List(a)) => sqrt(eval(a).toLong)
 
-		case Call(name, args) => throw CalculatorError(s"Function $name@${args.length} is undefined", "Function")
+		case Call(name, args) => throw CalculatorError(s"Function $name/${args.length} is undefined", "Function")
 		case _ => throw CalculatorError(s"Unable to evaluate expression: $expr", "Engine")
 	}
 
