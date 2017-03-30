@@ -28,9 +28,9 @@ class Calculator {
 				CalculatorMessage(args.map(_.toString).mkString("\n"))
 
 			case Assign(name, expr) =>
-				val value = eval(expr)
-				memory += (name -> value)
-				CalculatorMessage(s"Defined $name = $value")
+				ans = eval(expr)
+				memory += (name -> ans)
+				CalculatorMessage(s"Defined $name = $ans")
 
 			case _ =>
 				CalculatorValue(eval(tree))
