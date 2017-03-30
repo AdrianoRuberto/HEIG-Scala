@@ -27,13 +27,13 @@ object Parser {
 	}
 
 	/** Parses a number literal */
-	private val parseNumber: Step[Double] = Step.single { case Number(value) => value }
+	private lazy val parseNumber: Step[Double] = Step.single { case Number(value) => value }
 
 	/** Parses a variable identifier, or a function name */
-	private val parseIdentifier: Step[String] = Step.single { case Identifier(name) => name }
+	private lazy val parseIdentifier: Step[String] = Step.single { case Identifier(name) => name }
 
 	/** Parses an atom, that can be either a number literal or an identifier */
-	private val parseAtom: Step[Expr] = (parseNumber map Literal.apply) | (parseIdentifier map Reference.apply)
+	private lazy val parseAtom: Step[Expr] = (parseNumber map Literal.apply) | (parseIdentifier map Reference.apply)
 
 	/** Parses function arguments list */
 	private lazy val parseArguments: Step[List[Expr]] = {
@@ -43,7 +43,7 @@ object Parser {
 	}
 
 	/** Parses a function call */
-	private val parseCall: Step[Expr] = {
+	private lazy val parseCall: Step[Expr] = {
 		parseIdentifier ~ LParen ~ parseArguments.? ~ RParen.! map {
 			case name ~ lp ~ args ~ rp => Call(name, args.getOrElse(Nil))
 		}
@@ -57,43 +57,46 @@ object Parser {
 	}
 
 	/** Parses a primary expression, that can be parentheses, function call or an atom */
-	private val parsePrimary: Step[Expr] = parseParentheses | parseCall | parseAtom
+	private lazy val parsePrimary: Step[Expr] = parseParentheses | parseCall | parseAtom
 
 	/** Parses the factorial operator */
-	private val parseFactorial: Step[Expr] = {
+	private lazy val parseFactorial: Step[Expr] = {
 		parsePrimary ~ Operator("!").* map {
 			case first ~ facs => facs.foldLeft(first) { case (operand, fac) => Unary(fac.value, operand) }
 		}
 	}
 
 	/** Parses the power operator */
-	private val parsePower: Step[Expr] = binaryStep(next = parseFactorial)(Operator("^"))
+	private lazy val parsePower: Step[Expr] = binaryStep(next = parseFactorial)(Operator("^"))
 
 	/** Parses the unary minus operator */
-	private val parseUnaryMinus: Step[Expr] = {
-		Operator("-") ~ (parseUnaryMinus | parsePower) map {
+	private lazy val parseUnaryMinus: Step[Expr] = {
+		Operator("-") ~ parseUnaryMinusOrPower map {
 			case minus ~ operand => Unary(minus.value, operand)
 		}
 	}
 
+	/** Parses an unary minus operation or a power operation */
+	private lazy val parseUnaryMinusOrPower: Step[Expr] = parseUnaryMinus | parsePower
+
 	/** Parses the modulo operator */
-	private val parseModulo: Step[Expr] = binaryStep(next = parseUnaryMinus | parsePower)(Operator("%"))
+	private lazy val parseModulo: Step[Expr] = binaryStep(next = parseUnaryMinusOrPower)(Operator("%"))
 
 	/** Parses multiplicative operators */
-	private val parseMultiplicative: Step[Expr] = binaryStep(next = parseModulo)(Operator("*"), Operator("/"))
+	private lazy val parseMultiplicative: Step[Expr] = binaryStep(next = parseModulo)(Operator("*"), Operator("/"))
 
 	/** Parses additive operators */
-	private val parseAdditive: Step[Expr] = binaryStep(next = parseMultiplicative)(Operator("+"), Operator("-"))
+	private lazy val parseAdditive: Step[Expr] = binaryStep(next = parseMultiplicative)(Operator("+"), Operator("-"))
 
 	/** Parses variable assignment */
-	private val parseAssign: Step[Expr] = {
+	private lazy val parseAssign: Step[Expr] = {
 		parseIdentifier ~ Operator("=") ~ parseAdditive.! map {
 			case id ~ eq ~ value => Assign(id, value)
 		}
 	}
 
 	/** Parses a top level expression */
-	private val parseExpression: Step[Expr] = {
+	private lazy val parseExpression: Step[Expr] = {
 		(parseAssign | parseAdditive) ~ End map { case e ~ end => e }
 	}
 
