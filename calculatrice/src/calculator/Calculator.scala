@@ -2,9 +2,11 @@ package calculator
 
 import calculator.parser.Expr._
 import calculator.parser.{Expr, Parser}
-
 import scala.util.Try
 
+/**
+  * Calculator engine
+  */
 class Calculator {
 	private var memory: Map[String, Double] = Map.empty
 	private var ans: Double = 0.0

@@ -3,9 +3,11 @@ package calculator.parser
 import calculator.lexer.Token._
 import calculator.lexer.{Lexer, Token}
 import calculator.parser.Expr._
-
 import scala.language.implicitConversions
 
+/**
+  * Input parser.
+  */
 object Parser {
 	/** Implicitly constructs a step parsing a single token when a token is used in place of a parse step */
 	private implicit def tokenStep[T <: Token](tok: T): Step[T] = Step.single { case t if t == tok => tok }
@@ -65,9 +67,7 @@ object Parser {
 	}
 
 	/** Parses the power operator */
-	private val parsePower: Step[Expr] = {
-		binaryStep(next = parseFactorial) { case op @ Operator("^") => op.value }
-	}
+	private val parsePower: Step[Expr] = binaryStep(next = parseFactorial)(Operator("^"))
 
 	/** Parses the unary minus operator */
 	private val parseUnaryMinus: Step[Expr] = {
@@ -77,19 +77,13 @@ object Parser {
 	}
 
 	/** Parses the modulo operator */
-	private val parseModulo: Step[Expr] = {
-		binaryStep(next = parseUnaryMinus | parsePower) { case op @ Operator("%") => op.value }
-	}
+	private val parseModulo: Step[Expr] = binaryStep(next = parseUnaryMinus | parsePower)(Operator("%"))
 
 	/** Parses multiplicative operators */
-	private val parseMultiplicative: Step[Expr] = {
-		binaryStep(next = parseModulo) { case op @ Operator("*" | "/") => op.value }
-	}
+	private val parseMultiplicative: Step[Expr] = binaryStep(next = parseModulo)(Operator("*"), Operator("/"))
 
 	/** Parses additive operators */
-	private val parseAdditive: Step[Expr] = {
-		binaryStep(next = parseMultiplicative) { case op @ Operator("+" | "-") => op.value }
-	}
+	private val parseAdditive: Step[Expr] = binaryStep(next = parseMultiplicative)(Operator("+"), Operator("-"))
 
 	/** Parses variable assignment */
 	private val parseAssign: Step[Expr] = {
@@ -104,9 +98,10 @@ object Parser {
 	}
 
 	/** Helper for binary operator parsing (with precedence) */
-	private def binaryStep(next: Step[Expr])(opMatcher: PartialFunction[Token, String]): Step[Expr] = {
-		next ~ (Step.single(opMatcher).! ~ next).* map {
-			case first ~ ops => ops.foldLeft(first) { case (lhs, (op ~ rhs)) => Binary(op, lhs, rhs) }
+	private def binaryStep(next: Step[Expr])(operator: Operator, operators: Operator*): Step[Expr] = {
+		val operatorMatcher = operators.foldLeft(tokenStep[Operator](operator))(_ | _)
+		next ~ (operatorMatcher.! ~ next).* map {
+			case first ~ operations => operations.foldLeft(first) { case (lhs, (op ~ rhs)) => Binary(op.value, lhs, rhs) }
 		}
 	}
 

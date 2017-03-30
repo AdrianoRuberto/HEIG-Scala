@@ -1,13 +1,12 @@
 package calculator.lexer
 
 import calculator.lexer.Token.SourceToken
-
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 object Lexer {
 	case class LexerOffset(value: Int) extends AnyVal {
-		def +(skip: Int): LexerOffset = LexerOffset(value + skip)
+		def + (skip: Int): LexerOffset = LexerOffset(value + skip)
 	}
 
 	def tokenize(input: String): List[SourceToken] = readNext(input.toList, ListBuffer.empty, LexerOffset(0))

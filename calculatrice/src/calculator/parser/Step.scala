@@ -1,11 +1,19 @@
 package calculator.parser
+
 import calculator.lexer.Token
 import calculator.lexer.Token.SourceToken
 import calculator.parser.Step.Tokens
-
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
+/**
+  * A parsing step.
+  *
+  * Each step parses a subset of the input language. Operations on Step allow to
+  * combines then to form a complete input parser.
+  *
+  * @tparam T the type of value produces by this step
+  */
 private[parser] trait Step[T] {
 	/** Apply this parser step to the given input tokens */
 	def apply(tokens: Tokens): StepResult[T]
@@ -14,7 +22,7 @@ private[parser] trait Step[T] {
 	  * Constructs a new parser step by combining this step with another one.
 	  * The resulting step will return the results of both step only if both steps succeed.
 	  */
-	def ~[B](next: => Step[B]): Step[T ~ B] = {
+	def ~[B] (next: => Step[B]): Step[T ~ B] = {
 		(tokens: Tokens) => apply(tokens).flatMap { case (a, rest) => next(rest).map(b => new ~(a, b)) }
 	}
 
@@ -23,7 +31,7 @@ private[parser] trait Step[T] {
 	  * The resulting step will return the result of the first step if it succeed, otherwise
 	  * the result of the other step will be returned.
 	  */
-	def |[B >: T](next: => Step[B]): Step[B] = (tokens: Tokens) => apply(tokens) orElse next(tokens)
+	def |[B >: T] (next: => Step[B]): Step[B] = (tokens: Tokens) => apply(tokens) orElse next(tokens)
 
 	/** Constructs an optional parser step from this step */
 	def ? : Step[Option[T]] = (tokens: Tokens) => apply(tokens).map(Some.apply) orElse Success(None, tokens)
