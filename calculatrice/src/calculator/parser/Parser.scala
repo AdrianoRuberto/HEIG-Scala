@@ -37,7 +37,7 @@ object Parser {
 
 	/** Parses function arguments list */
 	private lazy val parseArguments: Step[List[Expr]] = {
-		parseAdditive ~ (Comma ~ parseAdditive map { case comma ~ arg => arg }).* map {
+		parseAdditive ~ (Comma ~ parseAdditive.! map { case comma ~ arg => arg }).* map {
 			case first ~ nexts => first :: nexts
 		}
 	}
@@ -71,7 +71,7 @@ object Parser {
 
 	/** Parses the unary minus operator */
 	private lazy val parseUnaryMinus: Step[Expr] = {
-		Operator("-") ~ parseUnaryMinusOrPower map {
+		Operator("-") ~ parseUnaryMinusOrPower.! map {
 			case minus ~ operand => Unary(minus.value, operand)
 		}
 	}
@@ -103,7 +103,7 @@ object Parser {
 	/** Helper for binary operator parsing (with precedence) */
 	private def binaryStep(next: Step[Expr])(operator: Operator, operators: Operator*): Step[Expr] = {
 		val operatorMatcher = operators.foldLeft(tokenStep[Operator](operator))(_ | _)
-		next ~ (operatorMatcher.! ~ next).* map {
+		next ~ (operatorMatcher ~ next.!).* map {
 			case first ~ operations => operations.foldLeft(first) { case (lhs, (op ~ rhs)) => Binary(op.value, lhs, rhs) }
 		}
 	}

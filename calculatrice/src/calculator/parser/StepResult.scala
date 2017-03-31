@@ -28,10 +28,10 @@ private[parser] case class Success[+T](value: T, rest: List[SourceToken]) extend
 /**
   * Failed parsing
   *
-  * @param token      the unexpected token
+  * @param unexpected the unexpected token
   * @param definitive if definitive, this failure won't be recoverable by backtracking
   */
-private[parser] case class Failure(token: SourceToken, definitive: Boolean = false) extends StepResult[Nothing] {
+private[parser] case class Failure(unexpected: SourceToken, definitive: Boolean = false) extends StepResult[Nothing] {
 	def map[U](f: (Nothing) => U): StepResult[U] = this
 	def flatMap[U](f: (Nothing, List[SourceToken]) => StepResult[U]): StepResult[U] = this
 	def orElse[U >: Nothing](fallback: => StepResult[U]): StepResult[U] = if (definitive) this else fallback
