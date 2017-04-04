@@ -95,9 +95,16 @@ object Parser {
 		}
 	}
 
+	/** Parses top-level command */
+	private lazy val parseCommand: Step[Expr] = {
+		Colon ~ parseIdentifier.! ~ parseArguments.? map {
+			case colon ~ cmd ~ args => Command(cmd, args.getOrElse(Nil))
+		}
+	}
+
 	/** Parses a top level expression */
 	private lazy val parseExpression: Step[Expr] = {
-		(parseAssign | parseAdditive) ~ End map { case e ~ end => e }
+		(parseCommand | parseAssign | parseAdditive) ~ End map { case e ~ end => e }
 	}
 
 	/** Helper for binary operator parsing (with precedence) */

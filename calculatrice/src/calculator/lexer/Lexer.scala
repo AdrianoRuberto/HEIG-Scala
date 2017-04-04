@@ -23,6 +23,8 @@ object Lexer {
 				readNext(cs, acc += (if (p == '(') Token.LParen else Token.RParen), offset + 1)
 			case ',' :: cs =>
 				readNext(cs, acc += Token.Comma, offset + 1)
+			case ':' :: cs =>
+				readNext(cs, acc += Token.Colon, offset + 1)
 			case c :: cs if Character.isDigit(c) =>
 				val (consumed, token, next) = readNumber(input)
 				readNext(next, acc += token, offset + consumed)

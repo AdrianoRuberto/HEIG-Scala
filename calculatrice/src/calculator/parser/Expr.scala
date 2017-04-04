@@ -34,5 +34,8 @@ object Expr {
 
 	/** A function call */
 	case class Call(fun: String, args: List[Expr]) extends Expr
+
+	/** A top level command */
+	case class Command(cmd: String, args: List[Expr]) extends Expr
 }
 

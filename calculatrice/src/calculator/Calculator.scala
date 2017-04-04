@@ -19,21 +19,27 @@ class Calculator {
 
 	def execute(tree: Expr): CalculatorResult = Try {
 		tree match {
-			case Call("clear", _) =>
-				memory = memory.empty
-				ans = 0.0
-				CalculatorMessage("Memory cleared")
-
-			case Call("show", args) =>
-				CalculatorMessage(args.map(_.toString).mkString("\n"))
+			case Command("clear", args) =>
+				args match {
+					case Reference(name) :: Nil =>
+						memory -= name
+						CalculatorMessage(s"Variable $name is now undefined")
+					case Nil =>
+						memory = memory.empty
+						ans = 0.0
+						CalculatorMessage("Memory cleared")
+					case _ =>
+						throw CalculatorError(s"Usage ':clear [variable]'", "Command")
+				}
+			case Command("show", args) => CalculatorMessage(args.map(_.toString).mkString("\n"))
+			case Command(name, args) => throw CalculatorError(s"Command $name/${args.length} is undefined", "Command")
 
 			case Assign(name, expr) =>
 				ans = eval(expr)
 				memory += (name -> ans)
 				CalculatorMessage(s"Defined $name = $ans")
 
-			case _ =>
-				CalculatorValue(eval(tree))
+			case _ => CalculatorValue(eval(tree))
 		}
 	}.toEither.fold(
 		{

@@ -31,6 +31,9 @@ object Token {
 	/** A comma */
 	case object Comma extends Token
 
+	/** A colon */
+	case object Colon extends Token
+
 	/** The end of input token */
 	case object End extends Token
 
