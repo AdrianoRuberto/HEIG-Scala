@@ -33,7 +33,7 @@ object Parser {
 	private lazy val parseIdentifier: Step[String] = Step.single { case Identifier(name) => name }
 
 	/** Parses an atom, that can be either a number literal or an identifier */
-	private lazy val parseAtom: Step[Expr] = (parseNumber map Literal.apply) | (parseIdentifier map Reference.apply)
+	private lazy val parseAtom: Step[Expr] = (parseNumber map Literal) | (parseIdentifier map Reference.apply)
 
 	/** Parses function arguments list */
 	private lazy val parseArguments: Step[List[Expr]] = {
@@ -62,7 +62,7 @@ object Parser {
 	/** Parses the factorial operator */
 	private lazy val parseFactorial: Step[Expr] = {
 		parsePrimary ~ Operator("!").* map {
-			case first ~ facs => facs.foldLeft(first) { case (operand, fac) => Unary(fac.value, operand) }
+			case first ~ facs => (first /: facs) { case (operand, fac) => Unary(fac.value, operand) }
 		}
 	}
 
@@ -102,9 +102,9 @@ object Parser {
 
 	/** Helper for binary operator parsing (with precedence) */
 	private def binaryStep(next: Step[Expr])(operator: Operator, operators: Operator*): Step[Expr] = {
-		val operatorMatcher = operators.foldLeft(tokenStep[Operator](operator))(_ | _)
+		val operatorMatcher = (tokenStep(operator) /: operators)(_ | _)
 		next ~ (operatorMatcher ~ next.!).* map {
-			case first ~ operations => operations.foldLeft(first) { case (lhs, (op ~ rhs)) => Binary(op.value, lhs, rhs) }
+			case first ~ operations => (first /: operations) { case (lhs, (op ~ rhs)) => Binary(op.value, lhs, rhs) }
 		}
 	}
 
