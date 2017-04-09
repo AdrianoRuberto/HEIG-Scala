@@ -14,9 +14,9 @@ object Parser {
 
 	/** Parses text input and returns an expression tree */
 	def parse(input: String): Either[ParseError, Expr] = {
-		val tokens = Lexer.tokenize(input)
+		val tokens = Lexer.tokenize(input.toStream)
 		parseExpression(tokens) match {
-			case Success(expr, Nil) =>
+			case Success(expr, Stream.Empty) =>
 				Right(expr)
 			case Failure(unexpected, _) =>
 				val wave = mkWave(input, unexpected)

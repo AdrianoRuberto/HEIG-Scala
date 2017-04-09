@@ -8,7 +8,7 @@ private[parser] sealed trait StepResult[+T] {
 	def map[U](f: T => U): StepResult[U]
 
 	/** Transforms the value of this result by using another result, if successful */
-	def flatMap[U](f: (T, List[SourceToken]) => StepResult[U]): StepResult[U]
+	def flatMap[U](f: (T, Stream[SourceToken]) => StepResult[U]): StepResult[U]
 
 	/** If this step was a failure, the other result is used instead */
 	def orElse[U >: T](fallback: => StepResult[U]): StepResult[U]
@@ -18,9 +18,9 @@ private[parser] sealed trait StepResult[+T] {
 }
 
 /** Successful parsing */
-private[parser] case class Success[+T](value: T, rest: List[SourceToken]) extends StepResult[T] {
+private[parser] case class Success[+T](value: T, rest: Stream[SourceToken]) extends StepResult[T] {
 	def map[U](f: (T) => U): StepResult[U] = Success(f(value), rest)
-	def flatMap[U](f: (T, List[SourceToken]) => StepResult[U]): StepResult[U] = f(value, rest)
+	def flatMap[U](f: (T, Stream[SourceToken]) => StepResult[U]): StepResult[U] = f(value, rest)
 	def orElse[U >: T](fallback: => StepResult[U]): StepResult[U] = this
 	def asDefinitive: StepResult[T] = this
 }
@@ -33,7 +33,7 @@ private[parser] case class Success[+T](value: T, rest: List[SourceToken]) extend
   */
 private[parser] case class Failure(unexpected: SourceToken, definitive: Boolean = false) extends StepResult[Nothing] {
 	def map[U](f: (Nothing) => U): StepResult[U] = this
-	def flatMap[U](f: (Nothing, List[SourceToken]) => StepResult[U]): StepResult[U] = this
+	def flatMap[U](f: (Nothing, Stream[SourceToken]) => StepResult[U]): StepResult[U] = this
 	def orElse[U >: Nothing](fallback: => StepResult[U]): StepResult[U] = if (definitive) this else fallback
 	def asDefinitive: StepResult[Nothing] = if (definitive) this else copy(definitive = true)
 }

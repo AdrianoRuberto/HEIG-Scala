@@ -58,11 +58,11 @@ private[parser] trait Step[T] {
 
 private[parser] object Step {
 	/** Input type of parser Step functions */
-	private type Tokens = List[SourceToken]
+	private type Tokens = Stream[SourceToken]
 
 	/** Creates a parser Step that matches a single token */
 	def single[T](f: PartialFunction[Token, T]): Step[T] = (tokens: Tokens) => tokens match {
-		case tok :: next => f.lift(tok.token).map(Success(_, next)).getOrElse(Failure(tok))
-		case Nil => Failure(SourceToken(Token.Unknown('?'), 0))
+		case tok #:: next => f.lift(tok.token).map(Success(_, next)).getOrElse(Failure(tok))
+		case Stream.Empty => Failure(SourceToken(Token.Unknown('?'), 0))
 	}
 }
