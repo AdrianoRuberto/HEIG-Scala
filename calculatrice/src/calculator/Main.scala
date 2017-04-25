@@ -38,7 +38,8 @@ object Main {
 		  |- You can use functions (eg: `gcd(65, 22)`)
 		  |  - Available functions:
 		  |    - gcd(a, b): greater common divisor of a and b
-		  |    - sqrt(a): square root of a (also available as `a ^ 0.5`)
+		  |    - sqrt(a): square root of a (approximation within 0.0001)
+		  |      - You can use `a ^ 0.5` to get Java sqrt implementation
 		  |    - modinv(a, b): inverse of a, mod b
 		  |- Variable can be defined and used in expressions
 		  |  - Variable are defined by `variable = <expr>`

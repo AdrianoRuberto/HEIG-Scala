@@ -2,6 +2,7 @@ package calculator
 
 import calculator.parser.Expr._
 import calculator.parser.{Expr, Parser}
+import scala.annotation.tailrec
 import scala.util.Try
 
 /**
@@ -45,6 +46,7 @@ class Calculator {
 	}.toEither.fold(
 		{
 			case e: CalculatorError => CalculatorMessage(e.fullMessage)
+			case e: IllegalArgumentException => CalculatorMessage(s"[Engine Error] ${e.getMessage}")
 			case e: Throwable => CalculatorMessage(s"[Engine Error] Uncaught exception: ${e.getMessage}")
 		},
 		identity
@@ -59,9 +61,9 @@ class Calculator {
 		case Unary(operator, operand) => operation(operator, eval(operand))
 		case Binary(op, lhs, rhs) => operation(op, eval(lhs), eval(rhs))
 
-		case Call("gcd", List(a, b)) => gcd(eval(a).toLong, eval(b).toLong)
-		case Call("modinv", List(a, b)) => modInvert(eval(a).toLong, eval(b).toLong)
-		case Call("sqrt", List(a)) => sqrt(eval(a).toLong)
+		case Call("gcd", List(a, b)) => gcd(eval(a), eval(b))
+		case Call("modinv", List(a, b)) => modInvert(eval(a), eval(b))
+		case Call("sqrt", List(a)) => sqrt(eval(a))
 
 		case Call(name, args) => throw CalculatorError(s"Function $name/${args.length} is undefined", "Function")
 		case _ => throw CalculatorError(s"Unable to evaluate expression: $expr", "Engine")
@@ -79,14 +81,16 @@ class Calculator {
 
 	/** Unary operations */
 	def operation(operator: String, operand: Double): Double = operator match {
-		case "!" => factorial(operand.toLong)
+		case "!" => factorial(operand)
 		case "-" => -operand
 	}
 
 	/** Computes factorial of n */
-	def factorial(n: Long): Long = {
-		require(n >= 0)
-		def loop(n: Long, acc: Long): Long = {
+	def factorial(n: Double): Double = {
+		require(n >= 0, "factorial of negative is undefined")
+		require(n.isWhole, "factorial of non-whole number is undefined")
+		@tailrec
+		def loop(n: Double, acc: Double): Double = {
 			if (n <= 1) acc
 			else loop(n - 1, acc * n)
 		}
@@ -94,14 +98,20 @@ class Calculator {
 	}
 
 	/** Greatest Common Divisor */
-	def gcd(a: Long, b: Long): Long = {
-		if (b == 0) a else gcd(b, a % b)
+	def gcd(a: Double, b: Double): Double = {
+		require(a.isWhole && b.isWhole, "gcd of non-whole numbers is undefined")
+		@tailrec
+		def loop(x: Double, y: Double): Double = {
+			if (y == 0) x else loop(y, x % y)
+		}
+		loop(a, b)
 	}
 
 	/** Square root */
 	def sqrt(n: Double): Double = {
-		require(n >= 0)
+		require(n >= 0, "square root of negative number is not implemented")
 		val epsilon = 0.0001
+		@tailrec
 		def loop(x: Double): Double = {
 			if (Math.abs(x * x - n) / n < epsilon) x
 			else loop((x + n / x) / 2)
@@ -110,10 +120,11 @@ class Calculator {
 	}
 
 	/** Extended Euclidean algorithm implementation */
-	def egcd(u: Long, v: Long): (Long, Long, Long) = {
-		def loop(a: Long, b: Long,
-		         x1: Long = 0, x2: Long = 1,
-		         y1: Long = 1, y2: Long = 0): (Long, Long, Long) = {
+	def egcd(u: Double, v: Double): (Double, Double, Double) = {
+		@tailrec
+		def loop(a: Double, b: Double,
+		         x1: Double = 0, x2: Double = 1,
+		         y1: Double = 1, y2: Double = 0): (Double, Double, Double) = {
 			if (b == 0) (x2, y2, a)
 			else {
 				loop(
@@ -130,7 +141,8 @@ class Calculator {
 	}
 
 	/** Modular multiplicative inverse */
-	def modInvert(u: Long, v: Long): Long = {
+	def modInvert(u: Double, v: Double): Double = {
+		require(u.isWhole && v.isWhole, "modInvert of non-whole numbers is undefined")
 		val (x, _, z) = egcd(u, v)
 		assert(z == 1)
 		x
