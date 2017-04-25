@@ -76,11 +76,19 @@ object Anagrams extends App {
 	  * in the example above could have been displayed in some other order.
 	  */
 
-	def subseqs(fp: FingerPrint): List[FingerPrint] = "" :: (1 to fp.length).flatMap(fp.sliding(_)).distinct.toList
+	// def subseqs(fp: FingerPrint): List[FingerPrint] = "" :: (1 to fp.length).flatMap(fp.sliding(_)).distinct.toList
+	def subseqs(fp: FingerPrint): List[FingerPrint] = {
+		if (fp.isEmpty) List("")
+		else {
+			val seqs = subseqs(fp.tail)
+			val head = fp.head
+			(seqs ++ seqs.map(head + _)).distinct
+		}
+	}
 
 
 	// Test code with for example:
-	// println(subseqs("aabb"))
+	println(subseqs("aabb"))
 
 
 	/** Subtracts fingerprint `y` from fingerprint `x`.
@@ -89,7 +97,6 @@ object Anagrams extends App {
 	  * the fingerprint `x` -- any character appearing in `y` must
 	  * appear in `x`.
 	  */
-
 
 	def subtract(x: FingerPrint, y: FingerPrint): FingerPrint = {
 		require(subseqs(x).contains(y))
@@ -124,21 +131,20 @@ object Anagrams extends App {
 	  */
 
 	def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
-
-		def compose(fp: FingerPrint, currentSentence: ListBuffer[Word]): List[Sentence] = fp match {
-			case "" => List(currentSentence.toList)
+		def compose(fp: FingerPrint, currentSentence: List[Word]): List[Sentence] = fp match {
+			case "" => List(currentSentence.reverse)
 			case _ =>
 				val subfp = subseqs(fp)
 				(for (word <- dictionary; wfp = fingerPrint(word); if subfp.contains(wfp)) yield {
-					compose(subtract(fp, wfp), currentSentence += word)
+					compose(subtract(fp, wfp), word :: currentSentence)
 				}).flatten
 		}
-		compose(fingerPrint(sentence), ListBuffer.empty)
+		compose(fingerPrint(sentence.map(_.toLowerCase)), Nil).distinct
 	}
 
 	// Test code with for example:
-	//println(sentenceAnagrams(List("eat", "tea")))
-	//println(sentenceAnagrams(List("you", "olive")))
+	println(sentenceAnagrams(List("eat", "tea")))
+	println(sentenceAnagrams(List("you", "olive")))
 	println(sentenceAnagrams(List("I", "love", "you")))
 
 }
