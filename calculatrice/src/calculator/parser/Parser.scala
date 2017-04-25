@@ -66,21 +66,20 @@ object Parser {
 		}
 	}
 
-	/** Parses the power operator */
-	private lazy val parsePower: Step[Expr] = binaryStep(next = parseFactorial)(Operator("^"))
-
 	/** Parses the unary minus operator */
 	private lazy val parseUnaryMinus: Step[Expr] = {
-		Operator("-") ~ parseUnaryMinusOrPower.! map {
+		Operator("-") ~ parseFactorial.! map {
 			case minus ~ operand => Unary(minus.value, operand)
 		}
 	}
-
 	/** Parses an unary minus operation or a power operation */
-	private lazy val parseUnaryMinusOrPower: Step[Expr] = parseUnaryMinus | parsePower
+	private lazy val parseUnaryMinusOrFactorial: Step[Expr] = parseUnaryMinus | parseFactorial
+
+	/** Parses the power operator */
+	private lazy val parsePower: Step[Expr] = binaryStep(next = parseUnaryMinusOrFactorial)(Operator("^"))
 
 	/** Parses the modulo operator */
-	private lazy val parseModulo: Step[Expr] = binaryStep(next = parseUnaryMinusOrPower)(Operator("%"))
+	private lazy val parseModulo: Step[Expr] = binaryStep(next = parsePower)(Operator("%"))
 
 	/** Parses multiplicative operators */
 	private lazy val parseMultiplicative: Step[Expr] = binaryStep(next = parseModulo)(Operator("*"), Operator("/"))
