@@ -29,11 +29,12 @@ class Calculator {
 						ans = 0.0
 						CalculatorMessage("Memory cleared")
 					case _ =>
-						throw CalculatorError(s"Usage ':clear [variable]'", "Command")
+						throw CalculatorError(s"Usage ':clear [variable?]'", "Command")
 				}
 			case Command("show", args) => CalculatorMessage(args.map(_.toString).mkString("\n"))
 			case Command(name, args) => throw CalculatorError(s"Command $name/${args.length} is undefined", "Command")
 
+			case Assign("ans", _) => throw CalculatorError("Defining `ans` is forbidden", "Memory")
 			case Assign(name, expr) =>
 				ans = eval(expr)
 				memory += (name -> ans)
@@ -67,7 +68,7 @@ class Calculator {
 	}
 
 	/** Binary operations */
-	def operation(op: String, lhs: Double, rhs: Double): Double = op match {
+	def operation(operator: String, lhs: Double, rhs: Double): Double = operator match {
 		case "+" => lhs + rhs
 		case "-" => lhs - rhs
 		case "/" => lhs / rhs
