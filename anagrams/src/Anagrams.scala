@@ -1,8 +1,7 @@
+import java.util.regex.Pattern
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
 
 object Anagrams extends App {
-
 	/** A word is simply a `String`. */
 	type Word = String
 
@@ -17,7 +16,6 @@ object Anagrams extends App {
 	  * "ppp"
 	  * ""
 	  */
-
 	type FingerPrint = String
 
 
@@ -26,19 +24,17 @@ object Anagrams extends App {
 	  * A dictionary of English words is given to you as an external file (linuxwords.txt)
 	  * that you can load to use with your program
 	  */
-
 	val dictionary: List[Word] =
 		List("ate", "eat", "tea", "pot", "top", "sonja", "jason", "normal",
-			 "I", "love", "you", "olive")
+			"I", "love", "you", "olive")
 
 
 	/** Converts a word/sentence into its fingerprint.
 	  * The fingerprint has the same characters as the word, with the same
 	  * number of occurrences, but the characters appear in sorted order.
 	  */
-
-	def fingerPrint(s: Word): FingerPrint = s.sorted
-	def fingerPrint(s: Sentence): FingerPrint = s.foldLeft("")(_ + _).sorted
+	def fingerPrint(s: Word): FingerPrint = s.toLowerCase.sorted
+	def fingerPrint(s: Sentence): FingerPrint = fingerPrint(("" /: s) (_ + _))
 
 
 	/** `matchingWords` is a `Map` from fingerprints to a sequence of all
@@ -52,7 +48,6 @@ object Anagrams extends App {
 	  *
 	  * "aet"-> List("ate", "eat", "tea")
 	  */
-
 	val matchingWords: Map[FingerPrint, List[Word]] = dictionary.groupBy(fingerPrint)
 
 	/** Returns all the anagrams of a given word. */
@@ -75,20 +70,22 @@ object Anagrams extends App {
 	  * Note that the order of the subsequences does not matter -- the subsequences
 	  * in the example above could have been displayed in some other order.
 	  */
-
-	// def subseqs(fp: FingerPrint): List[FingerPrint] = "" :: (1 to fp.length).flatMap(fp.sliding(_)).distinct.toList
 	def subseqs(fp: FingerPrint): List[FingerPrint] = {
-		if (fp.isEmpty) List("")
-		else {
-			val seqs = subseqs(fp.tail)
-			val head = fp.head
-			(seqs ++ seqs.map(head + _)).distinct
+		def generate(partialFp: FingerPrint): List[FingerPrint] = {
+			if (partialFp.isEmpty) {
+				List("")
+			} else {
+				val seqs = generate(partialFp.tail)
+				val head = partialFp.head
+				seqs ++ seqs.map(head + _)
+			}
 		}
+		generate(fp).distinct
 	}
 
 
 	// Test code with for example:
-	println(subseqs("aabb"))
+	//println(subseqs("aabb"))
 
 
 	/** Subtracts fingerprint `y` from fingerprint `x`.
@@ -97,12 +94,16 @@ object Anagrams extends App {
 	  * the fingerprint `x` -- any character appearing in `y` must
 	  * appear in `x`.
 	  */
-
 	def subtract(x: FingerPrint, y: FingerPrint): FingerPrint = {
-		require(subseqs(x).contains(y))
+		require(subseqs(x).contains(y), s"`$y` must be a subsequence of `$x`")
 		@tailrec
 		def removeOne(a: FingerPrint, b: FingerPrint): FingerPrint = {
-			if (b.isEmpty) a else removeOne(a.replaceFirst(b.head.toString, ""), b.tail)
+			// Removes one occurrence of the first character from b in a until b is empty
+			// The String#replaceFirst is actually taking a regex pattern as first argument,
+			// using Pattern.quote is the correct thing to do here even if not strictly
+			// necessary for our specific use-case.
+			if (b.isEmpty) a
+			else removeOne(a.replaceFirst(Pattern.quote(b.take(1)), ""), b.tail)
 		}
 		removeOne(x, y)
 	}
@@ -129,22 +130,40 @@ object Anagrams extends App {
 	  *
 	  * Note: There is only one anagram of an empty sentence.
 	  */
-
 	def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
-		def compose(fp: FingerPrint, currentSentence: List[Word]): List[Sentence] = fp match {
-			case "" => List(currentSentence.reverse)
+		def compose(fp: FingerPrint, sentence: List[Word] = Nil): List[Sentence] = fp match {
+			case "" =>
+				// If the remaining fingerprint is empty, we have successfully composed an anagram!
+				// Actually, the sentence is in reverse order, but since words order does not matter
+				// in the final result (every possible ordering will be returned anyway), there is
+				// no need to reverse the list at this point
+				List(sentence)
 			case _ =>
-				val subfp = subseqs(fp)
-				(for (word <- dictionary; wfp = fingerPrint(word); if subfp.contains(wfp)) yield {
-					compose(subtract(fp, wfp), word :: currentSentence)
-				}).flatten
+				// If there is some remaining char in the fingerprint, we first compute the subseqs
+				// of this fingerprint to be able to identify words that could be used to compose
+				// the sentence (their fingerprint must be a subsequence of the remaining fp), then:
+				// - For each word in the dictionary
+				// - We compute its fingerprint
+				// - If this fingerprint is a subsequence of the remaining available fingerprint
+				// - Then we attempt to use the word to form a sentence, adding the word to the
+				//   current sentence and substracting fingerprints
+				// - The recursive call will produce a list of every acceptable anagrams using
+				//   the current word at the current position, we then simply return the list
+				//   of all these anagrams (a sneaky flatMap is hidden somewhere there!)
+				val candidates = subseqs(fp)
+				for {
+					word <- dictionary
+					wfp = fingerPrint(word)
+					if candidates.contains(wfp)
+					anagram <- compose(subtract(fp, wfp), word :: sentence)
+				} yield anagram
 		}
-		compose(fingerPrint(sentence.map(_.toLowerCase)), Nil).distinct
+		compose(fingerPrint(sentence)).distinct
 	}
 
 	// Test code with for example:
 	println(sentenceAnagrams(List("eat", "tea")))
 	println(sentenceAnagrams(List("you", "olive")))
 	println(sentenceAnagrams(List("I", "love", "you")))
-
+	println(sentenceAnagrams(List()))
 }
