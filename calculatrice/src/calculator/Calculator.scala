@@ -9,16 +9,31 @@ import scala.util.Try
   * Calculator engine
   */
 class Calculator {
+	/**
+	  * The calculator memory
+	  * Each map entry correspond to a defined variable
+	  */
 	private var memory: Map[String, Double] = Map.empty
+
+	/**
+	  * The special `ans` variable
+	  * This variable always holds the result of the last operation
+	  */
 	private var ans: Double = 0.0
 
+	/**
+	  * Executes the given input by parsing it and evaluating it.
+	  *
+	  * @param input the input expression
+	  * @return the execution result
+	  */
 	def execute(input: String): CalculatorResult = Parser.parse(input.trim).map(execute) match {
 		case Left(parseError) => CalculatorMessage(s"[Parse error] ${parseError.msg}")
 		case Right(res @ CalculatorValue(value)) => ans = value; res
 		case Right(res) => res
 	}
 
-	def execute(tree: Expr): CalculatorResult = Try {
+	private def execute(tree: Expr): CalculatorResult = Try {
 		tree match {
 			case Command("clear", args) =>
 				args match {
@@ -52,7 +67,7 @@ class Calculator {
 		identity
 	)
 
-	def eval(expr: Expr): Double = expr match {
+	private def eval(expr: Expr): Double = expr match {
 		case Literal(value) => value
 
 		case Reference("ans") => ans
@@ -70,7 +85,7 @@ class Calculator {
 	}
 
 	/** Binary operations */
-	def operation(operator: String, lhs: Double, rhs: Double): Double = operator match {
+	private def operation(operator: String, lhs: Double, rhs: Double): Double = operator match {
 		case "+" => lhs + rhs
 		case "-" => lhs - rhs
 		case "/" => lhs / rhs
@@ -80,13 +95,13 @@ class Calculator {
 	}
 
 	/** Unary operations */
-	def operation(operator: String, operand: Double): Double = operator match {
+	private def operation(operator: String, operand: Double): Double = operator match {
 		case "!" => factorial(operand)
 		case "-" => -operand
 	}
 
 	/** Computes factorial of n */
-	def factorial(n: Double): Double = {
+	private def factorial(n: Double): Double = {
 		require(n >= 0, "factorial of negative is undefined")
 		require(n.isWhole, "factorial of non-whole number is undefined")
 		@tailrec
@@ -98,7 +113,7 @@ class Calculator {
 	}
 
 	/** Greatest Common Divisor */
-	def gcd(a: Double, b: Double): Double = {
+	private def gcd(a: Double, b: Double): Double = {
 		require(a.isWhole && b.isWhole, "gcd of non-whole numbers is undefined")
 		@tailrec
 		def loop(x: Double, y: Double): Double = {
@@ -108,7 +123,7 @@ class Calculator {
 	}
 
 	/** Square root */
-	def sqrt(n: Double): Double = {
+	private def sqrt(n: Double): Double = {
 		require(n >= 0, "square root of negative number is not implemented")
 		val epsilon = 0.0001
 		@tailrec
@@ -120,7 +135,7 @@ class Calculator {
 	}
 
 	/** Extended Euclidean algorithm implementation */
-	def egcd(u: Double, v: Double): (Double, Double, Double) = {
+	private def egcd(u: Double, v: Double): (Double, Double, Double) = {
 		@tailrec
 		def loop(a: Double, b: Double,
 		         x1: Double = 0, x2: Double = 1,
@@ -141,7 +156,7 @@ class Calculator {
 	}
 
 	/** Modular multiplicative inverse */
-	def modInvert(u: Double, v: Double): Double = {
+	private def modInvert(u: Double, v: Double): Double = {
 		require(u.isWhole && v.isWhole, "modInvert of non-whole numbers is undefined")
 		val (x, _, z) = egcd(u, v)
 		assert(z == 1)

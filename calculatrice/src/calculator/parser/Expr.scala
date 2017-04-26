@@ -4,7 +4,6 @@ package calculator.parser
 sealed trait Expr
 
 object Expr {
-
 	/** A number literal */
 	case class Literal(value: Double) extends Expr
 

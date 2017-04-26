@@ -68,11 +68,12 @@ object Parser {
 
 	/** Parses the unary minus operator */
 	private lazy val parseUnaryMinus: Step[Expr] = {
-		Operator("-") ~ parseFactorial.! map {
+		Operator("-") ~ parseUnaryMinusOrFactorial.! map {
 			case minus ~ operand => Unary(minus.value, operand)
 		}
 	}
-	/** Parses an unary minus operation or a power operation */
+
+	/** Parses an unary minus operation or a factorial operation */
 	private lazy val parseUnaryMinusOrFactorial: Step[Expr] = parseUnaryMinus | parseFactorial
 
 	/** Parses the power operator */
@@ -108,7 +109,7 @@ object Parser {
 
 	/** Helper for binary operator parsing (with precedence) */
 	private def binaryStep(next: Step[Expr])(operator: Operator, operators: Operator*): Step[Expr] = {
-		val operatorMatcher = (tokenStep(operator) /: operators)(_ | _)
+		val operatorMatcher = (tokenStep(operator) /: operators) (_ | _)
 		next ~ (operatorMatcher ~ next.!).* map {
 			case first ~ operations => (first /: operations) { case (lhs, (op ~ rhs)) => Binary(op.value, lhs, rhs) }
 		}
@@ -123,11 +124,11 @@ object Parser {
 		val truncatesRight = cutoff < input.length
 		val view = input.substring(dropping, cutoff)
 		val viewIdent = " " * (if (truncatesLeft) 2 else 4)
-		val leftEllipse = if (truncatesLeft) ".." else ""
-		val rightEllipse = if (truncatesRight) ".." else ""
+		val leftEllipsis = if (truncatesLeft) ".." else ""
+		val rightEllipsis = if (truncatesRight) ".." else ""
 		val wave = "~" * (offset - dropping)
 		val waveIndent = " " * 4
-		s"$viewIdent$leftEllipse$view$rightEllipse\n$waveIndent$wave^"
+		s"$viewIdent$leftEllipsis$view$rightEllipsis\n$waveIndent$wave^"
 	}
 }
 

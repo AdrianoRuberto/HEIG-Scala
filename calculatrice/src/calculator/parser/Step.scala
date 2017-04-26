@@ -61,6 +61,7 @@ private[parser] object Step {
 	private type Tokens = Stream[SourceToken]
 
 	/** Creates a parser Step that matches a single token */
+	//noinspection MatchToPartialFunction (workaround for a type inference issue in IntelliJ)
 	def single[T](f: PartialFunction[Token, T]): Step[T] = (tokens: Tokens) => tokens match {
 		case tok #:: next => f.lift(tok.token).map(Success(_, next)).getOrElse(Failure(tok))
 		case Stream.Empty => Failure(SourceToken(Token.Unknown('?'), 0))
