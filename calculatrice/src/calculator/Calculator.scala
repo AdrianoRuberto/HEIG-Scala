@@ -61,7 +61,7 @@ class Calculator {
 	}.toEither.fold(
 		{
 			case e: CalculatorError => CalculatorMessage(e.fullMessage)
-			case e: IllegalArgumentException => CalculatorMessage(s"[Engine Error] ${e.getMessage}")
+			case e: IllegalArgumentException => CalculatorMessage(s"[Domain Error] ${e.getMessage}")
 			case e: Throwable => CalculatorMessage(s"[Engine Error] Uncaught exception: ${e.getMessage}")
 		},
 		identity
@@ -88,6 +88,7 @@ class Calculator {
 	private def operation(operator: String, lhs: Double, rhs: Double): Double = operator match {
 		case "+" => lhs + rhs
 		case "-" => lhs - rhs
+		case "/" if rhs == 0 => throw CalculatorError(s"Division by zero", "Domain")
 		case "/" => lhs / rhs
 		case "*" => lhs * rhs
 		case "%" => lhs % rhs
@@ -124,7 +125,7 @@ class Calculator {
 
 	/** Square root */
 	private def sqrt(n: Double): Double = {
-		require(n >= 0, "square root of negative number is not implemented")
+		require(n >= 0, "square root of negative number is unsupported")
 		val epsilon = 0.0001
 		@tailrec
 		def loop(x: Double): Double = {
