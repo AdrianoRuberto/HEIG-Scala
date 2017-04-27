@@ -118,7 +118,7 @@ class Calculator {
 		require(a.isWhole && b.isWhole, "gcd of non-whole numbers is undefined")
 		@tailrec
 		def loop(x: Double, y: Double): Double = {
-			if (y == 0) x else loop(y, x % y)
+			if (y == 0) Math.abs(x) else loop(y, x % y)
 		}
 		loop(a, b)
 	}
