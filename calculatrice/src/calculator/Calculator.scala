@@ -136,31 +136,32 @@ class Calculator {
 	}
 
 	/** Extended Euclidean algorithm implementation */
-	private def egcd(u: Double, v: Double): (Double, Double, Double) = {
+	private def egcd(a: Double, b: Double): (Double, Double, Double) = {
 		@tailrec
-		def loop(a: Double, b: Double,
-		         x1: Double = 0, x2: Double = 1,
-		         y1: Double = 1, y2: Double = 0): (Double, Double, Double) = {
-			if (b == 0) (x2, y2, a)
+		def loop(r: Double, rp: Double,
+		         u: Double = 1, v: Double = 0,
+		         up: Double = 0, vp: Double = 1): (Double, Double, Double) = {
+			if (rp == 0) (r, u, v)
 			else {
+				val r_rp = Math.floor(r / rp)
 				loop(
-					a = b,
-					b = a % b,
-					x1 = x2 - (a / b) * x1,
-					x2 = x1,
-					y1 = y2 - (a / b) * y1,
-					y2 = y1
+					r = rp,
+					rp = r - r_rp * rp,
+					u = up,
+					v = vp,
+					up = u - r_rp * up,
+					vp = v - r_rp * vp
 				)
 			}
 		}
-		loop(u, v)
+		loop(a, b)
 	}
 
 	/** Modular multiplicative inverse */
-	private def modInvert(u: Double, v: Double): Double = {
-		require(u.isWhole && v.isWhole, "modInvert of non-whole numbers is undefined")
-		val (x, _, z) = egcd(u, v)
-		assert(z == 1)
-		x
+	private def modInvert(a: Double, b: Double): Double = {
+		require(a.isWhole && b.isWhole, "modInvert of non-whole numbers is undefined")
+		val (gcd, u, _) = egcd(a, b)
+		require(gcd == 1, s"$a and $b are not co-prime")
+		if (u < 0) u + b else u
 	}
 }
