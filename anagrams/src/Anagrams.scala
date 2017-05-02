@@ -150,12 +150,11 @@ object Anagrams extends App {
 				// - The recursive call will produce a list of every acceptable anagrams using
 				//   the current word at the current position, we then simply return the list
 				//   of all these anagrams (a sneaky flatMap is hidden somewhere there!)
-				val candidates = subseqs(fp)
+				val words = subseqs(fp).collect(Function.unlift(matchingWords.get)).flatten
+
 				for {
-					word <- dictionary
-					wfp = fingerPrint(word)
-					if candidates.contains(wfp)
-					anagram <- compose(subtract(fp, wfp), word :: sentence)
+					word <- words
+					anagram <- compose(subtract(fp, fingerPrint(word)), word :: sentence)
 				} yield anagram
 		}
 		compose(fingerPrint(sentence)).distinct
