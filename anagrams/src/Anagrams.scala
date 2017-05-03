@@ -1,5 +1,7 @@
 import java.util.regex.Pattern
+
 import scala.annotation.tailrec
+import scala.io.Source
 
 object Anagrams extends App {
 	/** A word is simply a `String`. */
@@ -24,10 +26,11 @@ object Anagrams extends App {
 	  * A dictionary of English words is given to you as an external file (linuxwords.txt)
 	  * that you can load to use with your program
 	  */
-	val dictionary: List[Word] =
+	/*val dictionary: List[Word] =
 		List("ate", "eat", "tea", "pot", "top", "sonja", "jason", "normal",
-			"I", "love", "you", "olive")
+			"I", "love", "you", "olive")*/
 
+	val dictionary: List[Word] = Source.fromResource("linuxwords.txt").getLines().map(_.trim).filter(!_.isEmpty).toList
 
 	/** Converts a word/sentence into its fingerprint.
 	  * The fingerprint has the same characters as the word, with the same
@@ -165,5 +168,5 @@ object Anagrams extends App {
 	println(sentenceAnagrams(List("eat", "tea")))
 	println(sentenceAnagrams(List("you", "olive")))
 	println(sentenceAnagrams(List("I", "love", "you")))
-	println(sentenceAnagrams(List()))
+	println(sentenceAnagrams(List("This", "is", "a", "long", "sentence")))
 }
