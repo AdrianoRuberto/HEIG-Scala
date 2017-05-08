@@ -1,6 +1,3 @@
-import java.util.regex.Pattern
-
-import scala.annotation.tailrec
 import scala.io.Source
 
 object Anagrams extends App {
@@ -99,20 +96,11 @@ object Anagrams extends App {
 	  */
 	def subtract(x: FingerPrint, y: FingerPrint): FingerPrint = {
 		require(subseqs(x).contains(y), s"`$y` must be a subsequence of `$x`")
-		@tailrec
-		def removeOne(a: FingerPrint, b: FingerPrint): FingerPrint = {
-			// Removes one occurrence of the first character from b in a until b is empty
-			// The String#replaceFirst is actually taking a regex pattern as first argument,
-			// using Pattern.quote is the correct thing to do here even if not strictly
-			// necessary for our specific use-case.
-			if (b.isEmpty) a
-			else removeOne(a.replaceFirst(Pattern.quote(b.take(1)), ""), b.tail)
-		}
-		removeOne(x, y)
+		x diff y
 	}
 
 	// Test code with for example:
-	//println(subtract("aabbcc", "abc")) //
+	//println(subtract("aabbcc", "ab")) //
 
 
 	/** Returns a list of all anagram sentences of the given sentence.
@@ -135,29 +123,12 @@ object Anagrams extends App {
 	  */
 	def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
 		def compose(fp: FingerPrint, sentence: List[Word] = Nil): List[Sentence] = fp match {
-			case "" =>
-				// If the remaining fingerprint is empty, we have successfully composed an anagram!
-				// Actually, the sentence is in reverse order, but since words order does not matter
-				// in the final result (every possible ordering will be returned anyway), there is
-				// no need to reverse the list at this point
-				List(sentence)
+			case "" => List(sentence)
 			case _ =>
-				// If there is some remaining char in the fingerprint, we first compute the subseqs
-				// of this fingerprint to be able to identify words that could be used to compose
-				// the sentence (their fingerprint must be a subsequence of the remaining fp), then:
-				// - For each word in the dictionary
-				// - We compute its fingerprint
-				// - If this fingerprint is a subsequence of the remaining available fingerprint
-				// - Then we attempt to use the word to form a sentence, adding the word to the
-				//   current sentence and substracting fingerprints
-				// - The recursive call will produce a list of every acceptable anagrams using
-				//   the current word at the current position, we then simply return the list
-				//   of all these anagrams (a sneaky flatMap is hidden somewhere there!)
-				val words = subseqs(fp).collect(Function.unlift(matchingWords.get)).flatten
-
 				for {
-					word <- words
-					anagram <- compose(subtract(fp, fingerPrint(word)), word :: sentence)
+					subs <- subseqs(fp)
+					word <- matchingWords.getOrElse(subs, Nil)
+					anagram <- compose(subtract(fp, subs), word :: sentence)
 				} yield anagram
 		}
 		compose(fingerPrint(sentence)).distinct
